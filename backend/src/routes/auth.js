@@ -122,7 +122,7 @@ router.post('/login', authLimiter, async (req, res) => {
       user: { id: user.id, name: user.name, email: user.email },
     });
   } catch (err) {
-    console.error('login error:', err);
+    console.error('Login error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -151,7 +151,7 @@ router.get('/me', verifyJWT, async (req, res) => {
     }
     return res.json(rows[0]);
   } catch (err) {
-    console.error('me error:', err);
+    console.error('Me error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
