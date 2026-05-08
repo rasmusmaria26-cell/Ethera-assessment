@@ -1,63 +1,57 @@
 # Ethara — Team Task Manager
 
-A collaborative task management web app where teams create projects, invite members, assign tasks, and track progress. Lightweight Trello/Asana alternative.
+Ethara is a tool that helps teams manage their projects and tasks. You can create projects, add team members, and track work using a board.
 
-**Live URL:** *(add Railway URL after deployment)*
+---
+
+## What you can do
+
+- **Create Projects**: Start a new workspace for your team's goals.
+- **Manage Tasks**: Move tasks between "Todo," "In Progress," and "Done."
+- **Assign Members**: Add people to your project and give them specific tasks.
+- **Track Progress**: Use dashboards to see how much work is finished and who is busy.
+- **Secure Login**: Use an email and password to log in safely.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18, Vite 5, Tailwind CSS v3 |
-| Backend | Node.js, Express 4 |
-| Database | PostgreSQL via Supabase (raw `pg`, no ORM) |
-| Auth | JWT HS256 (7-day expiry) + bcrypt |
-| Deploy | Railway |
+| Part | Technology | Description |
+|---|---|---|
+| **Frontend** | React, Vite | The website the user interacts with. |
+| **Backend** | Node.js, Express | The server that handles data and logic. |
+| **Database** | PostgreSQL, Supabase | Where all project and task data is stored. |
+| **Styling** | Custom CSS, Tailwind | How the app looks (Cream, Ink, and Gold). |
+| **Deployment** | Vercel | Where the app is hosted online. |
 
 ---
 
-## Local Setup
+## How to run it locally
 
-### Prerequisites
-- Node.js ≥ 18
-- A [Supabase](https://supabase.com) project (free tier)
-
-### 1. Clone the repo
+### 1. Download the code
+Download the files to your computer:
 ```bash
-git clone https://github.com/your-username/ethera.git
-cd ethera
+git clone https://github.com/rasmusmaria26-cell/Ethara-assessment.git
+cd ethara
 ```
 
-### 2. Run the database schema
-1. Open your Supabase project → **SQL Editor**
-2. Paste and run the contents of `backend/src/db/schema.sql`
+### 2. Set up the Database
+1. Create a free project on [Supabase](https://supabase.com).
+2. Go to the **SQL Editor** in Supabase.
+3. Copy the text from `backend/src/db/schema.sql`, paste it into the editor, and click **Run**.
 
-### 3. Backend setup
-```bash
-cd backend
-npm install
+### 3. Set up the Backend (Server)
+1. Go to the backend folder: `cd backend`.
+2. Install the required files: `npm install`.
+3. Create a `.env` file (see `.env.example` for what to include).
+4. You must add your `DATABASE_URL` and a random string for `JWT_SECRET`.
+5. Start the server: `npm run dev`.
 
-# Copy and fill in env vars
-cp .env.example .env
-# Edit .env with your DATABASE_URL, JWT_SECRET, etc.
-
-npm run dev
-# Backend running on http://localhost:3000
-```
-
-### 4. Frontend setup
-```bash
-cd frontend
-npm install
-
-# (optional) copy env example — not needed for local dev (Vite proxy handles /api)
-cp .env.example .env
-
-npm run dev
-# Frontend running on http://localhost:5173
-```
+### 4. Set up the Frontend (App)
+1. Go to the frontend folder: `cd frontend`.
+2. Install the required files: `npm install`.
+3. Start the app: `npm run dev`.
+4. Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
@@ -65,68 +59,40 @@ npm run dev
 
 ### Backend (`backend/.env`)
 
-| Variable | Description | Example |
+| Variable | What it is | Example |
 |---|---|---|
-| `DATABASE_URL` | Supabase PostgreSQL connection string | `postgresql://postgres:[password]@[host]:5432/postgres` |
-| `JWT_SECRET` | Random secret ≥ 32 chars for signing JWTs | `a-long-random-string-here` |
-| `PORT` | Express listen port | `3000` |
-| `FRONTEND_URL` | Allowed CORS origin | `http://localhost:5173` (dev) or Railway frontend URL |
-
-### Frontend (`frontend/.env`)
-
-| Variable | Description | Example |
-|---|---|---|
-| `VITE_API_URL` | Backend base URL | Not needed in dev (Vite proxy). Set to Railway backend URL in production. |
+| `DATABASE_URL` | Your Supabase connection string | `postgresql://...` |
+| `JWT_SECRET` | A long random password for security | `my-secret-key-123` |
+| `PORT` | The port the server runs on | `3000` |
+| `FRONTEND_URL` | The URL of your frontend app | `http://localhost:5173` |
 
 ---
 
-## Railway Deployment
+## Deployment on Vercel
 
-### Step 1 — Push to GitHub
-Push the repo to a GitHub repository.
+This project is ready to be hosted on **Vercel**. 
 
-### Step 2 — Create Railway project
-1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
-2. Select your repo
-
-### Step 3 — Backend service
-1. In Railway, add a service → set **Root Directory** to `backend/`
-2. Set **Start Command** to `node src/index.js`
-3. Add environment variables:
-   - `DATABASE_URL` — from Supabase → Settings → Database → Connection string (use the **pooler** URL)
-   - `JWT_SECRET` — a long random secret
-   - `FRONTEND_URL` — your Railway frontend URL (add after frontend deploys)
-   - `PORT` — Railway sets this automatically; you can omit it
-
-### Step 4 — Frontend service
-1. In Railway, add another service → same repo
-2. Set **Root Directory** to `frontend/`
-3. Set **Build Command** to `npm run build`
-4. Set **Output Directory** to `dist`
-5. Add environment variable:
-   - `VITE_API_URL` — your Railway backend URL (e.g. `https://ethera-backend-xxxx.railway.app`)
-
-### Step 5 — Update CORS
-Go back to the backend service → update `FRONTEND_URL` to the Railway frontend URL.
+1. **Connect GitHub**: Connect this repository to your Vercel account.
+2. **Auto-Setup**: Vercel will find the `vercel.json` file and set up the services.
+3. **Environment Variables**: Go to Vercel Settings and add the variables from your backend `.env` file.
+4. **Deploy**: Push your code to GitHub, and Vercel will put the site online.
 
 ---
 
-## Role-Based Access Control
+## Permissions (Who can do what)
 
 | Action | Admin | Member |
 |---|---|---|
-| View project / tasks | ✓ | ✓ |
-| View dashboard | ✓ | ✓ |
-| Create task | ✓ | ✗ |
-| Edit task (all fields) | ✓ | ✗ |
-| Update own task status | ✓ | ✓ (only if assigned) |
-| Delete task | ✓ | ✗ |
-| Add / remove members | ✓ | ✗ |
-
-All role checks are enforced **server-side**. Frontend guards are UI-only enhancements.
+| View project and tasks | Yes | Yes |
+| Create new tasks | Yes | No |
+| Edit any task | Yes | No |
+| Update task status | Yes | Yes (if assigned) |
+| Manage team members | Yes | No |
 
 ---
 
 ## Design
-
-Warm editorial aesthetic — cream background (`#f5f0e8`), terracotta accent (`#c2643f`), Playfair Display headings, DM Sans UI text.
+The app uses a simple and clean design:
+- **Colors**: Cream background, dark ink text, and gold highlights.
+- **Fonts**: *Playfair Display* for large titles and *DM Sans* for regular text.
+- **Responsive**: It works on phones, tablets, and computers.
