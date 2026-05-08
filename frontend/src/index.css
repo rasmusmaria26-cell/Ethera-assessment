@@ -2,70 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Base ───────────────────────────────────────────────── */
-
-*, *::before, *::after {
-  box-sizing: border-box;
+@layer base {
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+  }
 }
 
-html {
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer utilities {
+  .rounded-card {
+    border-radius: theme('borderRadius.card');
+  }
+  .rounded-input {
+    border-radius: theme('borderRadius.input');
+  }
+  .rounded-badge {
+    border-radius: theme('borderRadius.badge');
+  }
+  .shadow-card {
+    box-shadow: theme('boxShadow.card');
+  }
 }
 
-body {
-  margin: 0;
-  background-color: #f5f0e8;
-  color: #1a1a1a;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  line-height: 1.5;
+/* Shimmer skeleton animation */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
 }
 
-/* ─── Typography ─────────────────────────────────────────── */
-
-h1, h2 {
-  font-family: 'Playfair Display', Georgia, serif;
-  letter-spacing: -0.01em;
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #ede8df 25%,
+    #e0d9cf 50%,
+    #ede8df 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
 }
 
-/* ─── Form elements ──────────────────────────────────────── */
-
-input, textarea, select {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 0.9375rem;
+@media (prefers-reduced-motion: reduce) {
+  .shimmer { animation: none; background: #ede8df; }
 }
 
-input:focus, textarea:focus, select:focus {
-  outline: none;
-  border-color: #c2643f;
-  box-shadow: 0 0 0 2px rgba(194, 100, 63, 0.15);
-}
-
-/* ─── Scrollbar ──────────────────────────────────────────── */
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #f5f0e8;
-}
-::-webkit-scrollbar-thumb {
-  background: #d6cfc3;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #bfb8ac;
-}
-
-/* ─── Transitions ────────────────────────────────────────── */
-
-.transition-base {
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
-}
-
-/* ─── Kanban column min-height ───────────────────────────── */
-.kanban-col {
-  min-height: 200px;
+/* Prevent body scroll when drawer is open */
+.drawer-open {
+  overflow: hidden;
 }

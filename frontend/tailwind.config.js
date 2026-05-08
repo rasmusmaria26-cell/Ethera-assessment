@@ -35,6 +35,26 @@ export default {
         card:  '0 1px 4px 0 rgba(26,26,26,0.07)',
         modal: '0 8px 40px 0 rgba(26,26,26,0.14)',
       },
+      animation: {
+        'fade-in':        'fadeIn 0.2s ease-out both',
+        'slide-in-right': 'slideInRight 0.28s cubic-bezier(0.16,1,0.3,1)',
+        'slide-up':       'slideUp 0.22s ease-out',
+        'count-up':       'none',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%':   { opacity: '0', transform: 'translateY(4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideInRight: {
+          '0%':   { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        slideUp: {
+          '0%':   { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
     },
   },
   plugins: [],
