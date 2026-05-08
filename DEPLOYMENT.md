@@ -1,6 +1,6 @@
-# Deployment Guide: Ethera (Vercel + GitHub)
+# Deployment Guide: Ethera (Vercel Multi-Service)
 
-This guide walks you through deploying the **Ethera** monorepo to Vercel. We will deploy the frontend and backend as two separate Vercel projects linked to the same GitHub repository.
+This guide walks you through deploying the **Ethera** monorepo to Vercel using the new **Multi-Service** deployment pattern.
 
 ## Phase 1: Push to GitHub
 
@@ -8,59 +8,43 @@ This guide walks you through deploying the **Ethera** monorepo to Vercel. We wil
     ```bash
     git init
     git add .
-    git commit -m "Prepare for deployment"
+    git commit -m "Add Vercel multi-service config"
     ```
-2.  **Create a New Repo on GitHub**:
-    - Go to [github.new](https://github.new) and create a repository named `ethera`.
-3.  **Push your code**:
+2.  **Push your code**:
     ```bash
-    git remote add origin https://github.com/YOUR_USERNAME/ethera.git
-    git branch -M main
     git push -u origin main
     ```
 
 ---
 
-## Phase 2: Deploy the Backend (API)
+## Phase 2: Deploy to Vercel
 
 1.  Go to the [Vercel Dashboard](https://vercel.com/dashboard) and click **"Add New" > "Project"**.
 2.  Import your `ethera` repository.
-3.  **Configure Project**:
-    - **Project Name**: `ethera-api` (or similar).
-    - **Root Directory**: Select `backend`.
-    - **Build & Development Settings**: Keep defaults (Vercel will detect the `vercel.json`).
+3.  **Vercel should detect the root `vercel.json`**:
+    - It will automatically set up two services: `frontend` (Vite) and `backend` (Express).
 4.  **Environment Variables**:
-    - Add `DATABASE_URL`: (Paste your Supabase connection string).
-    - Add `JWT_SECRET`: (Use a long random string).
-    - Add `FRONTEND_URL`: (You will update this later with the frontend URL).
-5.  Click **Deploy**. Once finished, copy the **Deployment URL** (e.g., `https://ethera-api.vercel.app`).
+    - Add these to the project settings:
+    - `DATABASE_URL`: Your Supabase connection string.
+    - `JWT_SECRET`: A long random string.
+    - `FRONTEND_URL`: The final deployment URL (Vercel will provide this).
+5.  Click **Deploy**.
 
 ---
 
-## Phase 3: Deploy the Frontend (UI)
+## Phase 3: Post-Deployment Check
 
-1.  Click **"Add New" > "Project"** again.
-2.  Import the same `ethera` repository.
-3.  **Configure Project**:
-    - **Project Name**: `ethera-app` (or similar).
-    - **Root Directory**: Select `frontend`.
-    - **Framework Preset**: Vite.
-4.  **Environment Variables**:
-    - Add `VITE_API_URL`: (Paste your Backend Deployment URL from Phase 2).
-5.  Click **Deploy**. Once finished, copy the **Frontend URL** (e.g., `https://ethera-app.vercel.app`).
+1.  Once deployed, Vercel will give you a single URL (e.g., `https://ethera-assessment.vercel.app`).
+2.  The Frontend will live at the root: `/`.
+3.  The API will live at: `/api`.
+4.  In your **Frontend Settings**, ensure `VITE_API_URL` is set to your deployment URL if you want to use absolute paths, but with this multi-service setup, **relative paths** (like `/api/...`) will work automatically!
 
 ---
 
-## Phase 4: Final Connection (CORS)
+## Technical Details
 
-1.  Go back to your **Backend Project** settings on Vercel.
-2.  Update the `FRONTEND_URL` environment variable to match your **Frontend URL** (e.g., `https://ethera-app.vercel.app`).
-3.  Redeploy the backend (or trigger a new build) to apply the CORS update.
-
----
-
-## Technical Notes
-
-- **CORS**: The backend only allows requests from the `FRONTEND_URL`.
-- **SPA Routing**: The `frontend/vercel.json` ensures that refreshing the page on a route like `/projects` doesn't result in a 404.
-- **Cookies**: Auth is handled via cookies with `credentials: true`. Ensure both domains are on the same base domain if you use custom domains, otherwise, standard `.vercel.app` domains work fine.
+- **Service Mapping**:
+  - `frontend` -> `/`
+  - `backend` -> `/api`
+- **SPA Support**: Handled via `frontend/vercel.json`.
+- **Express Support**: Handled via `backend/vercel.json`.
