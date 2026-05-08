@@ -1,10 +1,4 @@
--- Run this in the Supabase SQL Editor before starting the app
-
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- ────────────────────────────────────────────────
--- Tables
--- ────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS users (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -22,10 +16,6 @@ CREATE TABLE IF NOT EXISTS projects (
   created_at  TIMESTAMPTZ DEFAULT now()
 );
 
--- ────────────────────────────────────────────────
--- Enum types (only run once; Supabase keeps these)
--- ────────────────────────────────────────────────
-
 DO $$ BEGIN
   CREATE TYPE project_role  AS ENUM ('admin', 'member');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -37,10 +27,6 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
   CREATE TYPE task_status AS ENUM ('todo', 'inprogress', 'done');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-
--- ────────────────────────────────────────────────
--- Join tables
--- ────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS project_members (
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
@@ -62,10 +48,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   created_by  UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ DEFAULT now()
 );
-
--- ────────────────────────────────────────────────
--- Indexes
--- ────────────────────────────────────────────────
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tasks_project_id ON tasks(project_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);

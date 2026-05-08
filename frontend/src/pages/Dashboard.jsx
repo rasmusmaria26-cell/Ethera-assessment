@@ -64,11 +64,12 @@ export default function Dashboard() {
         ) : (
           <>
             {/* Top Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
               <StatCard label="Total Tasks" value={data.total_tasks} />
               <StatCard label="To Do" value={data.by_status.todo} leftAccentColor="#d1d5db" />
               <StatCard label="In Progress" value={data.by_status.inprogress} leftAccentColor="#c2643f" />
               <StatCard label="Done" value={data.by_status.done} leftAccentColor="#22c55e" />
+              <StatCard label="Overdue" value={data.overdue_count} leftAccentColor="#c0604a" />
             </div>
 
             {/* Main Visualizations Grid */}
