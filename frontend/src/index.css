@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ───────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background-color: #f5f0e8;
+  color: #1a1a1a;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+/* ─── Typography ─────────────────────────────────────────── */
+
+h1, h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Form elements ──────────────────────────────────────── */
+
+input, textarea, select {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.9375rem;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #c2643f;
+  box-shadow: 0 0 0 2px rgba(194, 100, 63, 0.15);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f5f0e8;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6cfc3;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #bfb8ac;
+}
+
+/* ─── Transitions ────────────────────────────────────────── */
+
+.transition-base {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+/* ─── Kanban column min-height ───────────────────────────── */
+.kanban-col {
+  min-height: 200px;
+}
