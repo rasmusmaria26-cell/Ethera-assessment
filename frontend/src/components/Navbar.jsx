@@ -32,7 +32,7 @@ export default function Navbar() {
                 className="w-8 h-8 rounded-full bg-terracotta/10 text-terracotta flex items-center justify-center font-sans font-medium text-sm"
                 title={user.name}
               >
-                {user.name.charAt(0).toUpperCase()}
+                {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
               </div>
             </div>
             <button

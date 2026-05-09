@@ -238,7 +238,7 @@ export default function TaskCard({ task, isAdmin, currentUserId, members, onUpda
                 className="w-6 h-6 rounded-full bg-terracotta/15 text-terracotta flex items-center justify-center text-[10px] font-sans font-medium"
                 title={task.assigned_to.name}
               >
-                {task.assigned_to.name.charAt(0).toUpperCase()}
+                {task.assigned_to?.name ? task.assigned_to.name.charAt(0).toUpperCase() : '?'}
               </div>
             )}
             {task.due_date && (
