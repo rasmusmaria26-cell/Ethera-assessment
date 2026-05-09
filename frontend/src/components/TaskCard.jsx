@@ -3,7 +3,7 @@ import api from '../api/client.js';
 import PriorityPicker from './PriorityPicker.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 
-function InlineEditModal({ task, onClose, onUpdated }) {
+function InlineEditModal({ task, members, onClose, onUpdated }) {
   const [title, setTitle]             = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
   const [priority, setPriority]       = useState(task.priority);
