@@ -3,7 +3,7 @@ ETHARA -- TEAM TASK MANAGER
 
 Ethara is a tool that helps teams manage their projects and tasks. You can create projects, add team members, and track work using a board.
 
-LIVE WEBSITE: https://ethera-assessment.vercel.app
+LIVE WEBSITE: https://ethera-frontend-production-808f.up.railway.app/
 GITHUB REPO:  https://github.com/rasmusmaria26-cell/Ethara-assessment.git
 
 WHAT YOU CAN DO
@@ -20,7 +20,7 @@ TECH STACK
 - Backend: Node.js and Express (The server for logic).
 - Database: PostgreSQL and Supabase (Where data is stored).
 - Styling: Custom CSS and Tailwind (The app's design).
-- Deployment: Vercel (Where the app is hosted online).
+- Deployment: Railway (Where the app is hosted online).
 
 HOW TO RUN IT LOCALLY
 ---------------------
@@ -56,18 +56,19 @@ Backend (backend/.env):
 - PORT: The port the server runs on (usually 3000).
 - FRONTEND_URL: The URL of your frontend app (http://localhost:5173).
 
-DEPLOYMENT ON VERCEL
---------------------
-1. Connect your GitHub account to Vercel.
-2. Vercel will find the vercel.json file and set up the site.
-3. Add your backend environment variables in the Vercel settings.
-4. Push your code to GitHub to put the site online.
+DEPLOYMENT ON RAILWAY
+---------------------
+1. Connect your GitHub account to Railway.
+2. Create two services: "frontend" and "backend".
+3. Add your environment variables in the Railway settings for each service.
+4. Set the build/start commands according to the monorepo structure.
 
 PERMISSIONS (Who can do what)
 -----------------------------
 - Admins: Can view projects, create tasks, edit tasks, update status, and manage members.
-- Members: Can view projects and update the status of tasks assigned to them.
+- Members: Can view projects and update the status of tasks specifically assigned to them.
 
 DESIGN
 ------
 The app uses a clean design with a cream background, dark ink text, and gold highlights. It works on computers, tablets, and phones.
+Using Playfair Display for titles and DM Sans for body text.
