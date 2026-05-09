@@ -1,11 +1,17 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/client.js';
 import Navbar from '../components/Navbar.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 
-// Palette for project accents
-const PALETTE = ['#c2643f', '#5c7a6b', '#7b6ba8', '#b07d3a', '#3a6b8a', '#8a3a5c'];
+const ACCENT_COLORS = [
+  '#c2643f', // terracotta
+  '#5c7a6b', // sage
+  '#7b6ba8', // lavender
+  '#b07d3a', // amber
+  '#3a6b8a', // steel
+  '#8a3a5c', // rose
+];
 
 function CreateProjectModal({ onClose, onCreated }) {
   const [name, setName]               = useState('');
@@ -85,45 +91,18 @@ function CreateProjectModal({ onClose, onCreated }) {
   );
 }
 
-const Shimmer = () => (
-  <div className="animate-pulse space-y-8">
-    <div className="space-y-4">
-      <div className="h-10 bg-sand rounded w-3/4"></div>
-      <div className="h-4 bg-sand rounded w-1/4"></div>
-      <div className="space-y-2 pt-2">
-        <div className="h-4 bg-sand rounded w-full"></div>
-        <div className="h-4 bg-sand rounded w-5/6"></div>
-      </div>
-    </div>
-    <div className="flex gap-12 border-y border-border py-8">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="space-y-2">
-          <div className="h-8 bg-sand rounded w-16"></div>
-          <div className="h-3 bg-sand rounded w-12"></div>
-        </div>
-      ))}
-    </div>
-    <div className="space-y-4">
-      <div className="h-4 bg-sand rounded w-12"></div>
-      <div className="flex gap-2">
-        {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-full bg-sand"></div>)}
-      </div>
-    </div>
-  </div>
-);
-
 export default function Projects() {
   const [projects, setProjects]             = useState([]);
   const [loading, setLoading]               = useState(true);
   const [showCreate, setShowCreate]         = useState(false);
-  const [hoveredProjectId, setHoveredId]     = useState(null);
-  const [selectedProjectId, setSelectedId]   = useState(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
-  const { addToast }                        = useToast();
-  const navigate                            = useNavigate();
+  const [selectedId, setSelectedId]         = useState(null);
+  const [loadingDetail, setLoadingDetail]   = useState(false);
+  const [hoveredProject, setHoveredProject] = useState(null);
   
-  const projectCache = useRef(new Map());
-  const debounceTimer = useRef(null);
+  const cache       = useRef({});
+  const hoverTimer  = useRef(null);
+  const { addToast } = useToast();
+  const navigate    = useNavigate();
 
   useEffect(() => {
     async function loadProjects() {
@@ -139,31 +118,35 @@ export default function Projects() {
     loadProjects();
   }, [addToast]);
 
-  const activeId = hoveredProjectId || selectedProjectId;
-  const activeData = activeId ? projectCache.current.get(activeId) : null;
+  const fetchProjectDetail = async (id) => {
+    if (cache.current[id]) {
+      setHoveredProject(cache.current[id]);
+      return;
+    }
 
-  const fetchProjectDetails = async (id) => {
-    if (projectCache.current.has(id)) return;
-    
-    setLoadingDetails(true);
+    setLoadingDetail(true);
     try {
-      const [detailRes, dashRes] = await Promise.all([
+      const [detailRes, statsRes] = await Promise.all([
         api.get(`/api/projects/${id}`),
-        api.get(`/api/projects/${id}/dashboard`)
+        api.get(`/api/projects/${id}/dashboard`),
       ]);
-      projectCache.current.set(id, { ...detailRes.data, ...dashRes.data });
-      setLoadingDetails(false);
+      const combined = { ...detailRes.data, stats: statsRes.data };
+      cache.current[id] = combined;
+      setHoveredProject(combined);
     } catch (err) {
-      console.error('Failed to fetch details', err);
-      setLoadingDetails(false);
+      console.error('Failed to fetch project detail', err);
+    } finally {
+      setLoadingDetail(false);
     }
   };
 
   const handleHover = (id) => {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setHoveredId(id);
-      if (id) fetchProjectDetails(id);
+    if (selectedId === id) return;
+    setSelectedId(id);
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    
+    hoverTimer.current = setTimeout(() => {
+      fetchProjectDetail(id);
     }, 120);
   };
 
@@ -171,217 +154,234 @@ export default function Projects() {
     setProjects([newProject, ...projects]);
     setShowCreate(false);
     setSelectedId(newProject.id);
-    fetchProjectDetails(newProject.id);
+    fetchProjectDetail(newProject.id);
   };
 
-  const getAccentColor = (index) => PALETTE[index % PALETTE.length];
+  const getAccentColor = (id) => {
+    if (!id) return ACCENT_COLORS[0];
+    const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return ACCENT_COLORS[hash % ACCENT_COLORS.length];
+  };
 
   return (
     <div className="min-h-screen bg-cream selection:bg-terracotta/10">
       <Navbar />
 
-      <main className="max-w-[1400px] mx-auto px-6 py-12 lg:py-16">
-        <div className="flex flex-col lg:flex-row gap-12 min-h-[600px]">
+      <main className="max-w-[1400px] mx-auto px-6 py-12">
+        <div className="flex flex-col lg:flex-row gap-8 h-[calc(100vh-200px)] min-h-[600px]">
           
-          {/* LEFT PANEL: Project List */}
-          <div className="w-full lg:w-[35%] flex flex-col">
-            <div className="mb-6 flex items-center justify-between">
-              <h1 className="font-serif text-2xl text-ink">Projects</h1>
+          {/* LEFT PANEL: PROJECT LIST (35%) */}
+          <section className="w-full lg:w-[35%] flex flex-col border border-border rounded-card bg-surface overflow-hidden shadow-card">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-sand/30">
+              <h2 className="font-serif text-lg text-ink font-bold">Your Projects</h2>
               <button
                 onClick={() => setShowCreate(true)}
-                className="bg-terracotta text-white text-xs font-sans font-medium px-4 py-2 rounded-input hover:bg-terracotta/90 transition-all shadow-sm active:scale-[0.98]"
+                className="bg-terracotta text-white text-[11px] uppercase tracking-widest font-sans font-bold px-3 py-2 rounded-badge hover:bg-terracotta/90 transition-all hover:shadow-md"
               >
                 + New Project
               </button>
             </div>
 
-            <div className="relative flex-1">
-              <div 
-                className="max-h-[700px] overflow-y-auto pr-2 space-y-1 custom-scrollbar"
-                style={{
-                  maskImage: 'linear-gradient(to bottom, black 90%, transparent 100%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, black 90%, transparent 100%)'
-                }}
-              >
-                {loading ? (
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-16 bg-sand/50 rounded-card animate-pulse mb-1"></div>
-                  ))
-                ) : projects.length === 0 ? (
-                  <div className="text-center py-12 px-4 border border-dashed border-border rounded-card">
-                    <p className="font-sans text-sm text-ink/40">No projects found</p>
-                  </div>
-                ) : (
-                  projects.map((p, i) => {
-                    const isActive = activeId === p.id;
-                    const accentColor = getAccentColor(i);
-                    
-                    return (
-                      <div
-                        key={p.id}
-                        onMouseEnter={() => handleHover(p.id)}
-                        onMouseLeave={() => handleHover(null)}
-                        onClick={() => navigate(`/projects/${p.id}`)}
-                        className={`
-                          relative px-5 py-4 cursor-pointer transition-all duration-[150ms] rounded-card group
-                          ${isActive ? 'bg-sand/40 border-l-[3px]' : 'bg-transparent border-l-[3px] border-l-transparent hover:bg-sand/20'}
-                        `}
-                        style={{ borderLeftColor: isActive ? accentColor : 'transparent' }}
-                      >
-                        <div className="flex items-center gap-3 mb-1">
-                          <div 
-                            className="w-2 h-2 rounded-full flex-shrink-0" 
-                            style={{ backgroundColor: accentColor }}
-                          />
-                          <span className={`text-[16px] font-sans font-medium transition-colors ${isActive ? 'text-ink' : 'text-ink/70 group-hover:text-ink'}`}>
-                            {p.name}
-                          </span>
-                          <span className="text-[10px] font-sans uppercase tracking-tighter bg-sand px-1.5 py-0.5 rounded-badge text-ink/40">
-                            {p.role}
-                          </span>
-                        </div>
-                        <p className="text-[12px] font-sans text-ink/40 ml-5 truncate">
-                          {p.total_tasks ? `${p.total_tasks} tasks` : 'No tasks yet'}
-                        </p>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT PANEL: Spotlight Preview */}
-          <div className="hidden lg:block w-[65%] relative">
-            <div className="sticky top-12 bg-surface rounded-card border border-border/60 p-10 min-h-[500px] shadow-card overflow-hidden transition-all duration-300">
-              
-              {!activeId ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center animate-fade-in">
-                  <h2 className="font-serif text-[48px] text-ink/10 select-none">Select a project</h2>
-                  <p className="font-sans text-[13px] text-ink/30 uppercase tracking-widest mt-2">Hover over a project to preview</p>
+            <div className="flex-1 overflow-y-auto scroll-smooth relative custom-scrollbar">
+              {loading ? (
+                <div className="p-6 space-y-4 animate-pulse">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <div key={i} className="h-16 bg-cream rounded-card" />
+                  ))}
+                </div>
+              ) : projects.length === 0 ? (
+                <div className="p-12 text-center">
+                  <p className="font-sans text-sm text-ink/40 italic">No projects found.</p>
                 </div>
               ) : (
-                <div 
-                  key={activeId} 
-                  className="relative animate-fade-in transition-all duration-200"
-                  style={{ animationName: 'spotlight-fade' }}
-                >
-                  {/* Decorative Circle */}
-                  <div 
-                    className="absolute -top-20 -right-20 w-[200px] h-[200px] rounded-full blur-[80px] pointer-events-none"
-                    style={{ backgroundColor: getAccentColor(projects.findIndex(p => p.id === activeId)), opacity: 0.12 }}
-                  />
-
-                  {loadingDetails ? <Shimmer /> : activeData && (
-                    <div className="space-y-10">
-                      {/* Top Section */}
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-4">
+                <ul className="divide-y divide-border/50">
+                  {projects.map((p) => {
+                    const isSelected = selectedId === p.id;
+                    const accent = getAccentColor(p.id);
+                    return (
+                      <li
+                        key={p.id}
+                        onMouseEnter={() => handleHover(p.id)}
+                        onClick={() => navigate(`/projects/${p.id}`)}
+                        className={`group cursor-pointer transition-all duration-150 relative ${
+                          isSelected ? 'bg-sand/20' : 'hover:bg-cream/50'
+                        }`}
+                      >
+                        {/* Selector Indicator */}
+                        {isSelected && (
                           <div 
-                            className="w-1 self-stretch rounded-full" 
-                            style={{ backgroundColor: getAccentColor(projects.findIndex(p => p.id === activeId)) }}
+                            className="absolute left-0 top-0 bottom-0 w-[3px]" 
+                            style={{ backgroundColor: accent }}
                           />
-                          <div className="space-y-1">
-                            <h2 className="font-serif text-[42px] leading-tight text-ink">{activeData.name}</h2>
-                            <span className="inline-block text-[13px] font-sans uppercase tracking-wider text-terracotta font-semibold">
-                              {activeData.currentUserRole || activeData.role}
+                        )}
+                        
+                        <div className="p-5">
+                          <div className="flex items-center gap-3 mb-1">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
+                            <h3 className={`text-[16px] font-sans font-medium transition-colors ${
+                              isSelected ? 'text-ink' : 'text-ink/70 group-hover:text-ink'
+                            }`}>
+                              {p.name}
+                            </h3>
+                            <span className="text-[9px] font-bold uppercase tracking-tighter bg-sand px-1.5 py-0.5 rounded-badge text-ink/40">
+                              {p.role}
                             </span>
                           </div>
+                          <p className="text-[12px] font-sans text-ink/40 pl-5">
+                            {p.task_count || '0'} tasks
+                          </p>
                         </div>
-                        <p className="font-sans text-[15px] text-ink/60 max-w-lg leading-relaxed line-clamp-3">
-                          {activeData.description || 'This project has no description yet. Start by adding a summary of goals and objectives.'}
-                        </p>
-                        <Link 
-                          to={`/projects/${activeId}`}
-                          className="inline-block text-terracotta text-sm font-sans font-medium hover:translate-x-1 transition-transform pt-2"
-                        >
-                          Open Project &rarr;
-                        </Link>
-                      </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {/* Bottom Fade Mask */}
+              <div className="sticky bottom-0 h-8 bg-gradient-to-t from-surface to-transparent pointer-events-none" />
+            </div>
+          </section>
 
-                      {/* Stats Strip */}
-                      <div className="flex items-center gap-12 border-y border-border/50 py-8">
-                        {[
-                          { label: 'Total Tasks', value: activeData.total_tasks || 0 },
-                          { label: 'Members', value: activeData.members?.length || 0 },
-                          { label: 'Created', value: new Date(activeData.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }
-                        ].map((stat, i) => (
-                          <div key={stat.label} className="flex items-center gap-12">
-                            <div className="space-y-1">
-                              <div className="font-serif text-[32px] text-ink leading-none">{stat.value}</div>
-                              <div className="text-[11px] font-sans uppercase tracking-widest text-ink/40 font-medium">{stat.label}</div>
-                            </div>
-                            {i < 2 && <div className="h-8 w-[1px] bg-border" />}
-                          </div>
-                        ))}
-                      </div>
+          {/* RIGHT PANEL: SPOTLIGHT (65%) */}
+          <section className="hidden lg:flex flex-1 border border-border rounded-card bg-surface shadow-card overflow-hidden relative">
+            {!selectedId ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
+                <h2 className="font-serif text-[48px] text-ink/15 mb-2 select-none animate-slide-up">Select a project</h2>
+                <p className="font-sans text-[13px] text-ink/30 uppercase tracking-widest animate-fade-in" style={{ animationDelay: '100ms' }}>
+                  Hover over a project in the list to preview details.
+                </p>
+              </div>
+            ) : (
+              <div className={`flex-1 p-12 relative flex flex-col transition-all duration-200 ${loadingDetail ? 'opacity-50 grayscale-[0.5]' : 'opacity-100'}`}>
+                {/* Decorative Accent Circle */}
+                <div 
+                  className="absolute -top-20 -right-20 w-80 h-80 rounded-full blur-[80px] pointer-events-none opacity-[0.12]"
+                  style={{ backgroundColor: hoveredProject ? getAccentColor(hoveredProject.id) : 'transparent' }}
+                />
 
-                      <div className="grid grid-cols-2 gap-12">
-                        {/* Members Section */}
-                        <div className="space-y-4">
-                          <h4 className="text-[11px] font-sans uppercase tracking-widest text-ink/40 font-bold">Team</h4>
-                          <div className="flex -space-x-3 items-center">
-                            {activeData.members?.slice(0, 6).map((m, idx) => (
-                              <div 
-                                key={m.id}
-                                title={m.name}
-                                className="w-8 h-8 rounded-full border-2 border-surface flex items-center justify-center text-[10px] font-sans font-bold text-white shadow-sm cursor-help"
-                                style={{ backgroundColor: getAccentColor(idx) }}
-                              >
-                                {m.name.charAt(0).toUpperCase()}
-                              </div>
-                            ))}
-                            {activeData.members?.length > 6 && (
-                              <div className="w-8 h-8 rounded-full bg-sand border-2 border-surface flex items-center justify-center text-[10px] font-sans font-bold text-ink/40">
-                                +{activeData.members.length - 6}
-                              </div>
-                            )}
-                          </div>
+                {hoveredProject && (
+                  <div className="relative animate-fade-in">
+                    {/* TOP SECTION */}
+                    <div className="mb-12 border-l-4 pl-6" style={{ borderColor: getAccentColor(hoveredProject.id) }}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-terracotta">
+                          Project Detail
+                        </span>
+                        <span className="px-2 py-0.5 bg-sand rounded-badge text-[10px] font-bold text-ink/50 uppercase">
+                          {hoveredProject.currentUserRole || hoveredProject.role}
+                        </span>
+                      </div>
+                      <h1 className="font-serif text-[42px] leading-tight text-ink font-bold mb-4">
+                        {hoveredProject.name}
+                      </h1>
+                      <p className="font-sans text-[15px] text-ink/60 max-w-xl leading-relaxed line-clamp-3 mb-6">
+                        {hoveredProject.description || 'No description provided for this project.'}
+                      </p>
+                      <Link 
+                        to={`/projects/${hoveredProject.id}`}
+                        className="inline-flex items-center text-terracotta font-sans font-bold text-sm group"
+                      >
+                        Open Project 
+                        <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                      </Link>
+                    </div>
+
+                    {/* STATS STRIP */}
+                    <div className="grid grid-cols-3 gap-12 mb-12 py-8 border-y border-border/50">
+                      <div>
+                        <div className="font-serif text-[32px] text-ink mb-1">
+                          {hoveredProject.stats?.total_tasks || 0}
                         </div>
-
-                        {/* Progress Section */}
-                        <div className="space-y-4">
-                          <h4 className="text-[11px] font-sans uppercase tracking-widest text-ink/40 font-bold">Progress</h4>
-                          {activeData.total_tasks > 0 ? (
-                            <div className="space-y-3">
-                              <div className="h-2 w-full bg-sand rounded-full flex overflow-hidden">
-                                {['todo', 'inprogress', 'done'].map((status) => {
-                                  const count = activeData.by_status?.[status] || 0;
-                                  const pct = (count / activeData.total_tasks) * 100;
-                                  const color = status === 'todo' ? '#e2e8f0' : status === 'inprogress' ? '#c2643f' : '#16653499';
-                                  return (
-                                    <div 
-                                      key={status}
-                                      style={{ width: `${pct}%`, backgroundColor: color }}
-                                      className="h-full transition-all duration-500"
-                                    />
-                                  );
-                                })}
-                              </div>
-                              <div className="flex justify-between text-[10px] font-sans font-medium text-ink/50 uppercase tracking-tighter">
-                                <span>Todo: {Math.round((activeData.by_status?.todo || 0) / activeData.total_tasks * 100)}%</span>
-                                <span>In Progress: {Math.round((activeData.by_status?.inprogress || 0) / activeData.total_tasks * 100)}%</span>
-                                <span>Done: {Math.round((activeData.by_status?.done || 0) / activeData.total_tasks * 100)}%</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-xs font-sans text-ink/30 italic">No tasks yet</p>
-                          )}
+                        <div className="text-[11px] font-sans font-bold uppercase tracking-widest text-ink/40">
+                          Total Tasks
                         </div>
                       </div>
-
-                      <div className="pt-6">
-                        <Link to={`/projects/${activeId}`} className="text-[13px] font-sans text-ink/40 hover:text-ink transition-colors flex items-center gap-1 group">
-                          View Dashboard 
-                          <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-                        </Link>
+                      <div className="border-x border-border/50 px-12">
+                        <div className="font-serif text-[32px] text-ink mb-1">
+                          {hoveredProject.members?.length || 0}
+                        </div>
+                        <div className="text-[11px] font-sans font-bold uppercase tracking-widest text-ink/40">
+                          Team Members
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-serif text-[32px] text-ink mb-1">
+                          {new Date(hoveredProject.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                        <div className="text-[11px] font-sans font-bold uppercase tracking-widest text-ink/40">
+                          Created
+                        </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+
+                    {/* TEAM SECTION */}
+                    <div className="mb-10">
+                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-ink/40 mb-4">Team</h3>
+                      <div className="flex -space-x-3 overflow-hidden">
+                        {hoveredProject.members?.slice(0, 6).map((m, i) => (
+                          <div 
+                            key={m.id}
+                            title={m.name}
+                            className="w-8 h-8 rounded-full border-2 border-surface flex items-center justify-center text-[11px] font-bold text-white shadow-sm ring-1 ring-border/50"
+                            style={{ backgroundColor: ACCENT_COLORS[i % ACCENT_COLORS.length] }}
+                          >
+                            {m.name.charAt(0).toUpperCase()}
+                          </div>
+                        ))}
+                        {hoveredProject.members?.length > 6 && (
+                          <div className="w-8 h-8 rounded-full bg-sand border-2 border-surface flex items-center justify-center text-[10px] font-bold text-ink/40 ring-1 ring-border/50">
+                            +{hoveredProject.members.length - 6}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* PROGRESS SECTION */}
+                    <div className="mb-12">
+                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-ink/40 mb-4">Progress</h3>
+                      {hoveredProject.stats?.total_tasks > 0 ? (
+                        <div className="space-y-4">
+                          <div className="h-2 w-full bg-sand rounded-full flex overflow-hidden">
+                            <div 
+                              className="h-full bg-ink/10 transition-all duration-500" 
+                              style={{ width: `${(hoveredProject.stats.by_status.todo / hoveredProject.stats.total_tasks) * 100}%` }} 
+                            />
+                            <div 
+                              className="h-full bg-terracotta transition-all duration-500" 
+                              style={{ width: `${(hoveredProject.stats.by_status.inprogress / hoveredProject.stats.total_tasks) * 100}%` }} 
+                            />
+                            <div 
+                              className="h-full bg-[#166534]/60 transition-all duration-500" 
+                              style={{ width: `${(hoveredProject.stats.by_status.done / hoveredProject.stats.total_tasks) * 100}%` }} 
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] font-sans font-medium text-ink/50 uppercase tracking-tighter">
+                            <span>Todo: {Math.round((hoveredProject.stats.by_status.todo / hoveredProject.stats.total_tasks) * 100)}%</span>
+                            <span>In Progress: {Math.round((hoveredProject.stats.by_status.inprogress / hoveredProject.stats.total_tasks) * 100)}%</span>
+                            <span>Done: {Math.round((hoveredProject.stats.by_status.done / hoveredProject.stats.total_tasks) * 100)}%</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-ink/30 italic font-sans">No tasks created yet.</p>
+                      )}
+                    </div>
+
+                    <div className="mt-auto pt-6 border-t border-border/40">
+                      <Link to={`/projects/${hoveredProject.id}`} className="text-ink/40 hover:text-ink text-xs font-sans transition-colors flex items-center group">
+                        View Full Dashboard <span className="ml-1 text-[10px] transition-transform group-hover:translate-x-0.5">↗</span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading Shimmer Overlay */}
+                {loadingDetail && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/40 backdrop-blur-[1px]">
+                    <div className="w-12 h-12 border-2 border-sand border-t-terracotta rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
         </div>
       </main>
 
@@ -393,9 +393,12 @@ export default function Projects() {
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes spotlight-fade {
-          from { opacity: 0; transform: translateY(8px); }
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
