@@ -31,10 +31,11 @@ function signToken(user) {
 }
 
 function setTokenCookie(res, token) {
+  const isProd = process.env.NODE_ENV === 'production';
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 }
@@ -130,10 +131,11 @@ router.post('/login', authLimiter, async (req, res) => {
 // ─── POST /api/auth/logout ────────────────────────────────────────────────────
 
 router.post('/logout', (req, res) => {
+  const isProd = process.env.NODE_ENV === 'production';
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
   });
   return res.json({ message: 'Logged out successfully' });
 });
