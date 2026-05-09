@@ -68,14 +68,14 @@ cd ethara
 
 ---
 
-## Deployment on Vercel
+## Deployment on Railway
 
-This project is ready to be hosted on **Vercel**. 
+This project is deployed on **Railway**. 
 
-1. **Connect GitHub**: Connect this repository to your Vercel account.
-2. **Auto-Setup**: Vercel will find the `vercel.json` file and set up the services.
-3. **Environment Variables**: Go to Vercel Settings and add the variables from your backend `.env` file.
-4. **Deploy**: Push your code to GitHub, and Vercel will put the site online.
+1. **Connect GitHub**: Connect this repository to your Railway project.
+2. **Setup Services**: Create two services—one for `frontend` and one for `backend`.
+3. **Environment Variables**: Add your `.env` variables to each service in the Railway dashboard.
+4. **Custom Commands**: Set the Build and Start commands to use the monorepo structure (e.g., `npm run build --workspace=frontend`).
 
 ---
 
