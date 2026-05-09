@@ -1,6 +1,6 @@
-# Ethara — Team Task Manager
-
 Ethara is a tool that helps teams manage their projects and tasks. You can create projects, add team members, and track work using a board.
+
+**Live Website:** [https://ethera-frontend-production-808f.up.railway.app/](https://ethera-frontend-production-808f.up.railway.app/)
 
 ---
 
@@ -22,7 +22,7 @@ Ethara is a tool that helps teams manage their projects and tasks. You can creat
 | **Backend** | Node.js, Express | The server that handles data and logic. |
 | **Database** | PostgreSQL, Supabase | Where all project and task data is stored. |
 | **Styling** | Custom CSS, Tailwind | How the app looks (Cream, Ink, and Gold). |
-| **Deployment** | Vercel | Where the app is hosted online. |
+| **Deployment** | Railway | Where the app is hosted online. |
 
 ---
 
