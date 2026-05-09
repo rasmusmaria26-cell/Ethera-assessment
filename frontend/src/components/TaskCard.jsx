@@ -8,6 +8,7 @@ function InlineEditModal({ task, onClose, onUpdated }) {
   const [description, setDescription] = useState(task.description || '');
   const [priority, setPriority]       = useState(task.priority);
   const [dueDate, setDueDate]         = useState(task.due_date ? task.due_date.split('T')[0] : '');
+  const [assignedTo, setAssignedTo]   = useState(task.assigned_to?.id || '');
   const [saving, setSaving]           = useState(false);
   const { addToast }                  = useToast();
 
@@ -21,6 +22,7 @@ function InlineEditModal({ task, onClose, onUpdated }) {
         description: description.trim() || null,
         priority,
         due_date: dueDate || null,
+        assigned_to: assignedTo || null,
       });
       onUpdated(res.data);
       addToast({ message: 'Task updated successfully', type: 'success' });
@@ -66,6 +68,19 @@ function InlineEditModal({ task, onClose, onUpdated }) {
             <div>
               <label className="block text-xs font-sans font-medium text-ink/70 mb-1">Priority</label>
               <PriorityPicker value={priority} onChange={setPriority} />
+            </div>
+            <div>
+              <label className="block text-xs font-sans font-medium text-ink/70 mb-1">Assigned To</label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full border border-border rounded-input px-3 py-2 text-sm font-sans text-ink bg-cream focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/10 transition-colors duration-150"
+              >
+                <option value="">Unassigned</option>
+                {members.map(m => (
+                  <option key={m.id} value={m.id}>{m.name} ({m.email})</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-sans font-medium text-ink/70 mb-1">Due Date</label>
@@ -253,6 +268,7 @@ export default function TaskCard({ task, isAdmin, currentUserId, members, onUpda
       {editing && (
         <InlineEditModal
           task={task}
+          members={members}
           onClose={() => setEditing(false)}
           onUpdated={onUpdated}
         />
