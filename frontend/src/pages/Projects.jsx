@@ -324,7 +324,7 @@ export default function Projects() {
                             className="w-8 h-8 rounded-full border-2 border-surface flex items-center justify-center text-[11px] font-bold text-white shadow-sm ring-1 ring-border/50"
                             style={{ backgroundColor: ACCENT_COLORS[i % ACCENT_COLORS.length] }}
                           >
-                            {m.name.charAt(0).toUpperCase()}
+                            {m.name ? m.name.charAt(0).toUpperCase() : '?'}
                           </div>
                         ))}
                         {hoveredProject.members?.length > 6 && (
